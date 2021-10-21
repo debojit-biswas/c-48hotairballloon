@@ -1,4 +1,4 @@
-var backGround,backGroundImg,balloon,balloonImg,topObstaclesGroup,bottomObstaclesGroup,barGroup
+var backGround,backGroundImg,balloon,balloonImg,topObstaclesGroup,bottomObstaclesGroup,barGroup,gameOver,restart
 var score=0
 var PLAY=1,END=0
 var gameState=PLAY
@@ -7,6 +7,7 @@ var gameState=PLAY
 function preload()
 {
 backGroundImg=loadImage("assets/bg.png")
+backGroundImg2=loadImage("assets/bgImg2.jpg")
 balloonImg=loadAnimation("assets/balloon1.png","assets/balloon2.png","assets/balloon3.png")
 topObstacle1Img=loadImage("assets/obsTop1.png")
 topObstacle2Img=loadImage("assets/obsTop2.png")
@@ -14,6 +15,11 @@ topObstacle2Img=loadImage("assets/obsTop2.png")
 bottomObstacle1Img=loadImage("assets/obsBottom1.png")
 bottomObstacle2Img=loadImage("assets/obsBottom2.png")
 bottomObstacle3Img=loadImage("assets/obsBottom3.png")
+restartImg=loadImage("assets/restart.png")
+gameOverImg=loadImage("assets/gameOver.png")
+
+jumpSound=loadSound("assets/jump.mp3")
+dieSound=loadSound("assets/die.mp3")
 }
 
 
@@ -23,23 +29,36 @@ createCanvas(600,600)
 
 //background
 backGround=createSprite(165,485,10,10)
+getBackground()
 backGround.addImage(backGroundImg)
-backGround.scale=1.5
-//backGround.velocityX=-4
+backGround.velocityX=-4
+
 
 //balloon
 balloon=createSprite(50,150,20,20)
 balloon.addAnimation("climb",balloonImg)
 balloon.scale=.3
-balloon.debug=true
+balloon.setCollider("rectangle",0,0,200,100)
 
+//bottomGround
 bottomGround=createSprite(200,590,800,20)
 bottomGround.visible=false
 
+//topGround
 topGround=createSprite(200,10,800,20)
-topGround.visible=true
-topGround.debug=true
+topGround.visible=false
 
+//restart
+restart=createSprite(300,250,20,20)
+restart.visible=false
+restart.addImage(restartImg)
+
+//gameOver
+gameOver=createSprite(300,150,20,20)
+gameOver.visible=false
+gameOver.addImage(gameOverImg)
+
+//groups
 topObstaclesGroup=new Group()
 bottomObstaclesGroup=new Group ()
 barGroup=new Group()
@@ -51,17 +70,18 @@ function draw()
  background ("white")
 
 //infinite scrolling background
-///if(backGround.x<0)
-//{
- //// backGround.x=width/2
-//}
+if(backGround.x<0)
+{
+ backGround.x=width/2
+}
 
-
+//playState
 if(gameState===PLAY){ 
   //flying the balloon
   if (keyDown("space"))
   {
     balloon.velocityY=-7
+    jumpSound.play()
   }
 
   //adding gravity to balloon
@@ -71,19 +91,18 @@ spawnTopObstacles()
 spawnBottomObstacles()
 
 bar()
-
+//changingToEndState
 if(topObstaclesGroup.isTouching(balloon)||
 bottomObstaclesGroup.isTouching(balloon)||
 bottomGround.isTouching(balloon)||
 topGround.isTouching(balloon))
 {
   gameState=END
+  dieSound.play()
 }
-
-
 }
+//endState
 if(gameState===END){
- //console.log(gameState)
 balloon.setVelocity(0,0)
 topObstaclesGroup.setVelocityXEach(0)
 bottomObstaclesGroup.setVelocityXEach(0)
@@ -92,13 +111,46 @@ barGroup.setVelocityXEach(0)
 topObstaclesGroup.setLifetimeEach(-1)
 bottomObstaclesGroup.setLifetimeEach(-1)
 
+restart.visible=true
+
+gameOver.visible=true
+
+backGround.velocityX=0
+
+if(mousePressedOver(restart))
+{
+ reset ()
+
+}
+
+
 }
 drawSprites()
 
 Score ()
-//console.log(gameState)
+
 
 }
+
+function reset()
+{
+gameState=PLAY
+balloon.y=200
+
+gameOver.visible=false
+restart.visible=false
+
+topObstaclesGroup.destroyEach()
+bottomObstaclesGroup.destroyEach()
+
+
+  score=0
+
+  backGround.velocityX=-4
+
+
+}
+
 function spawnTopObstacles()
 {
 if (frameCount%70===0)
@@ -184,17 +236,36 @@ barGroup.add(bar1)
 
 }
 function Score ()
-
 {
-
 if (balloon.isTouching(barGroup))
-
 {
-  score=score+1
-text("Score"+score,550,20)
+  score=score+1 
 }
+fill("green")
+  textSize(20)
+text("Score: "+score,450,20)
+}
+//addingDaynightImages
+async function getBackground()
+{
+var response=await fetch("http://worldtimeapi.org/api/timezone/Asia/Kolkata")
+var resjson=await response.json()
+var dateTime=resjson.datetime
+console.log(dateTime)
+var hour=dateTime.slice(11,13)
+if (hour>=6&&hour<=18)
+{
+  backGround.addImage(backGroundImg)
+  backGround.scale=1.5}
+  
+  else{
+    backGround.addImage(backGroundImg2)
+  backGround.scale=4}
+  }
+  
+  
+  
 
-}
 
 
 //load restart and gameover png 
