@@ -248,7 +248,7 @@ text("Score: "+score,450,20)
 //addingDaynightImages
 async function getBackground()
 {
-var response=await fetch("http://worldtimeapi.org/api/timezone/Asia/Kolkata")
+var response=await fetch("https://worldtimeapi.org/api/timezone/Asia/Kolkata")
 var resjson=await response.json()
 var dateTime=resjson.datetime
 console.log(dateTime)
@@ -256,7 +256,7 @@ var hour=dateTime.slice(11,13)
 if (hour>=6&&hour<=18)
 {
   backGround.addImage(backGroundImg)
-  backGround.scale=1.5}
+  backGround.scale=3}
   
   else{
     backGround.addImage(backGroundImg2)
